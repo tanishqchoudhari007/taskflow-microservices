@@ -1,0 +1,22 @@
+
+# Credentials and environment variables
+.env
+.env.*
+!.env.example
+login.json
+
+# Python virtual environments
+venv/
+.venv/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+
+# Local development files
+.vscode/
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
