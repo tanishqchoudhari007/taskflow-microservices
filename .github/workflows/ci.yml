@@ -1,0 +1,27 @@
+
+name: TaskFlow CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check Auth Service syntax
+        run: python -m compileall -q services/auth-service/app
+
+      - name: Check Task Service syntax
+        run: python -m compileall -q services/task-service/app
