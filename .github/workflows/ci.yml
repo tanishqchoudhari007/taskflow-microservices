@@ -31,11 +31,19 @@ jobs:
       - name: Check Auth Service syntax
         run: python -m compileall -q services/auth-service/app
 
+      - name: Run Auth Service tests
+        working-directory: services/auth-service
+        run: python -m pytest -v
+
       - name: Install Task Service dependencies
         run: pip install -r services/task-service/requirements.txt
 
       - name: Check Task Service syntax
         run: python -m compileall -q services/task-service/app
+
+      - name: Run Task Service tests
+        working-directory: services/task-service
+        run: python -m pytest -v
 
   docker-build:
     runs-on: ubuntu-latest
