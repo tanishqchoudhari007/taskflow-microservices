@@ -87,7 +87,7 @@ jobs:
 
       - name: Generate Auth Service image metadata
         id: meta-auth
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/taskflow-auth
           tags: |
@@ -106,7 +106,7 @@ jobs:
 
       - name: Generate Task Service image metadata
         id: meta-task
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository_owner }}/taskflow-task
           tags: |
