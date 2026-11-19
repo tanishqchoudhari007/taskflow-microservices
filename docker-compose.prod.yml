@@ -1,0 +1,96 @@
+services:
+  auth-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+    networks:
+      - taskflow-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  task-db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: task_db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - task-db-data:/var/lib/postgresql/data
+    networks:
+      - taskflow-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d task_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-api:
+    image: ghcr.io/tanishqchoudhari007/taskflow-auth:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@auth-db:5432/auth_db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - taskflow-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  task-api:
+    image: ghcr.io/tanishqchoudhari007/taskflow-task:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@task-db:5432/task_db
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+    depends_on:
+      task-db:
+        condition: service_healthy
+    networks:
+      - taskflow-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - auth-api
+      - task-api
+    networks:
+      - taskflow-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  auth-db-data:
+  task-db-data:
+
+networks:
+  taskflow-network:
