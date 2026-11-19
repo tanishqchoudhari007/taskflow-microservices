@@ -48,12 +48,14 @@ jobs:
         working-directory: services/task-service
         run: python -m pytest -v
 
-      - name: Validate Docker Compose configuration
+      - name: Validate Docker Compose configurations
         env:
           POSTGRES_USER: taskflow
           POSTGRES_PASSWORD: ci-test-password
           JWT_SECRET_KEY: ci-test-secret
-        run: docker compose config -q
+        run: |
+          docker compose config -q
+          docker compose -f docker-compose.prod.yml config -q
 
       - name: Validate Nginx configuration
         run: |
