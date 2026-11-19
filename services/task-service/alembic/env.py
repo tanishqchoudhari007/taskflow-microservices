@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -15,6 +16,18 @@ config = context.config
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
+# Use the database URL supplied through the environment
+database_url = os.getenv("DATABASE_URL")
+
+if not database_url:
+    raise RuntimeError(
+        "DATABASE_URL environment variable must be set to run migrations."
+    )
+
+config.set_main_option(
+    "sqlalchemy.url",
+    database_url.replace("%", "%%")
+)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
