@@ -44,12 +44,14 @@ jobs:
       - name: Run Task Service tests
         working-directory: services/task-service
         run: python -m pytest -v
+
       - name: Validate Docker Compose configuration
         env:
           POSTGRES_USER: taskflow
           POSTGRES_PASSWORD: ci-test-password
           JWT_SECRET_KEY: ci-test-secret
         run: docker compose config -q
+
       - name: Validate Nginx configuration
         run: |
           docker run --rm \
@@ -80,23 +82,40 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Generate Auth Service image metadata
+        id: meta-auth
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/taskflow-auth
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long,prefix=
+
       - name: Build and Push Auth Service image
         uses: docker/build-push-action@v6
         with:
           context: services/auth-service
           push: ${{ github.event_name == 'push' }}
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/taskflow-auth:latest
-            ghcr.io/${{ github.repository_owner }}/taskflow-auth:${{ github.sha }}
+          tags: ${{ steps.meta-auth.outputs.tags }}
+          labels: ${{ steps.meta-auth.outputs.labels }}
           cache-from: type=gha,scope=taskflow-auth
           cache-to: type=gha,mode=max,scope=taskflow-auth
+
+      - name: Generate Task Service image metadata
+        id: meta-task
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/taskflow-task
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long,prefix=
+
       - name: Build and Push Task Service image
         uses: docker/build-push-action@v6
         with:
           context: services/task-service
           push: ${{ github.event_name == 'push' }}
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/taskflow-task:latest
-            ghcr.io/${{ github.repository_owner }}/taskflow-task:${{ github.sha }}
+          tags: ${{ steps.meta-task.outputs.tags }}
+          labels: ${{ steps.meta-task.outputs.labels }}
           cache-from: type=gha,scope=taskflow-task
           cache-to: type=gha,mode=max,scope=taskflow-task
