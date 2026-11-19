@@ -1,0 +1,31 @@
+version: 2
+
+updates:
+  # Auth Service Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/services/auth-service"
+    schedule:
+      interval: "weekly"
+
+  # Task Service Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/services/task-service"
+    schedule:
+      interval: "weekly"
+
+  # Docker base image updates
+  - package-ecosystem: "docker"
+    directory: "/services/auth-service"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "docker"
+    directory: "/services/task-service"
+    schedule:
+      interval: "weekly"
+
+  # GitHub Actions version updates
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
